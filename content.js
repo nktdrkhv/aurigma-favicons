@@ -1,61 +1,34 @@
-let defaultIcon = document.querySelector("link[rel=icon]")?.href
-
-// CSS styling from _generated/Less/MsPortalImpl/Base/Base.Images.css
-let styles;
-fetch(chrome.runtime.getURL('msportalfx-svg.css')).then(res => res.text()).then(text => styles = text)
-
 function loadIcon() {
-  let refIcon = [...document.querySelectorAll(".fxs-blade-header-icon use")].pop() // header
-  || document.querySelector(".fxc-gcflink-icon use") // table row - some don't have icons eg Subscriptions
-  || document.querySelector(".ext-hubs-artbrowse-emptyicon svg use") // optional overlays for table with no rows
-  || document.querySelector(".ext-hubs-browse-emptyicon svg use") // as above
-  || document.querySelector(".ext-overlay-image svg use") // as above
-  || [...document.querySelectorAll('.fxs-portal-activated use')].pop() // blade without header eg Properties
+  let iconUrl;
 
-  if (refIcon) {
-    setSVGIcon(document.querySelector(refIcon.href.baseVal))
-  } else {
-    // MEM directly embeds SVGs
-    let embedIcon = document.querySelector(".fxs-blade-header-icon svg") || document.querySelector('.fxs-portal-activated svg')
-    if (embedIcon) {
-      setSVGIcon(embedIcon)
-    } else {
-      // some blades use external icons eg costmanagement
-      let externalIcon = document.querySelector(".fxs-blade-header-icon img")?.src
-      || document.querySelector('.displayed-container')?.querySelector('.contributed-icon')?.src // Azure DevOps
-      setIcon(externalIcon || defaultIcon)
-    }
-  } 
-}
+  switch (document.URL) {
+    case document.URL.match('https://customerscanvas.com/help/*'):
+      iconUrl = chrome.runtime.getURL('assets/favicon-green.ico')
+      break;
+    case document.URL.match('https://customerscanvas.com/dev/*'):
+      iconUrl = chrome.runtime.getURL('assets/favicon-purple.ico')
+      break;
+    case document.URL.match('https://api.customerscanvashub.com/*'):
+      iconUrl = chrome.runtime.getURL('assets/favicon-yellow.ico')
+      break;
+    case document.URL.match('https://customerscanvashub.com/*'):
+      iconUrl = chrome.runtime.getURL('assets/favicon-orange.ico')
+      break;
+    case document.URL.match('https://eu.customerscanvashub.com/*'):
+      iconUrl = chrome.runtime.getURL('assets/favicon-red.ico')
+      break;
+    default:
+      break;
+  }
 
-function setSVGIcon(svgRef) {
-  svgRef = svgRef.cloneNode(true)
-
-  // Required XML namespace
-  svgRef.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-
-  // SVG definition dependencies eg linearGradients
-  svgRef.appendChild(document.querySelector('#DefsContainer defs').cloneNode(true))
-
-  let style = document.createElement('style')
-  style.innerHTML = styles
-  svgRef.appendChild(style)
-
-  // Hashes must be manually escaped: https://stackoverflow.com/a/63720894
-  setIcon("data:image/svg+xml,"+svgRef.outerHTML.replaceAll('symbol','svg').replaceAll('#','%23'))
+  setIcon(iconUrl);
 }
 
 function setIcon(icon) {
-  let link = document.querySelector("link[rel=icon]")
-  if (link) {
+  let link = document.querySelector("link[rel~=icon]")
+  if (link && icon) {
     link.removeAttribute('type')
     link.href = icon
-  }
-
-  let shortcut = document.querySelector("link[rel='shortcut icon']")
-  if (shortcut) {
-    shortcut.removeAttribute('type')
-    shortcut.href = icon
   }
 }
 
